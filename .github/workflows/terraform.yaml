@@ -49,7 +49,18 @@ jobs:
       # step 5: same as running "terraform plan" locally
       - name: Terraform Plan
         run: terraform plan
-      
+        # supplies the SQL password securely from GitHub Secrets, since there's
+          # no terraform.tfvars file in the pipeline (it's gitignored, never pushed)
+          # TF_VAR_ prefix is Terraform's own convention - it auto-maps to
+          # the matching variable name (sql_admin_password) with no extra code needed
+        env:
+          TF_VAR_sql_admin_password: ${{ secrets.SQL_ADMIN_PASSWORD }}
+
+      # step 6: same as running "terraform apply -auto-approve" locally - makes REAL changes
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' # only runs on an actual merge to main, never on a PR
         run: terraform apply -auto-approve
+         # same secret needed here too - apply also reads this variable
+        env:
+          TF_VAR_sql_admin_password: ${{ secrets.SQL_ADMIN_PASSWORD }}
+        
