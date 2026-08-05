@@ -1,0 +1,55 @@
+name: Terraform CI/CD
+
+on:
+  pull_request: 
+    branches: [main]
+  push:
+    branches: [main]
+
+# Workflows is treated as a separate entity. Github refer to this files to trigger the workflow
+# So it needs permissions to get the id ... workflow use the write persmission to get the token so it can access Azure RG
+# While read allows Workflow to read GitHub files
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # name we're giving this job (arbitrary label) ... chossing terraform here could have been anything else 
+  terraform:
+    # spin up a fresh Linux VM to run this job on
+    runs-on: ubuntu-latest
+
+    # run all commands from the repo root
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      # step 1: pull this repo's files onto the runner
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # step 2: authenticate to Azure using OIDC (no stored secret)
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: 16d1f4be-d2e6-46dc-8c8d-333b2d0e3788
+          tenant-id: f1740b1c-7588-481e-a865-9b0450c63cde
+          subscription-id: df31db6e-c382-459f-8734-b584e41e341f
+
+      # step 3: install Terraform onto this runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # step 4: same as running "terraform init" locally
+      - name: Terraform Init
+        run: terraform init
+
+      # step 5: same as running "terraform plan" locally
+      - name: Terraform Plan
+        run: terraform plan
+      
+      - name: Terraform Apply
+        if: github.event_name == "push"
+        run: terraform apply -auto-approve
