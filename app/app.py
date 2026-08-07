@@ -9,6 +9,8 @@ def get_db_connection():
     database = "db-3tier"
     username = "sqladmin"
     password = os.environ.get("SQL_PASSWORD")
+    # used the password below to generate 500 error to make sure wokrbooks on the portal work
+    # password ="wrong-password-on-purpose"
     connection_string = (
         f"DRIVER={{ODBC Driver 18 for SQL Server}};"
         f"SERVER={server};"

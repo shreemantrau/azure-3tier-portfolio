@@ -115,8 +115,16 @@ resource "azurerm_role_assignment" "web_keyvault" {
 }*/
 
 //key vault needs write access for the person/identity running terraofrm apply without the block below it errors out
-resource "azurerm_role_assignment" "terraform_keyvault" {
+resource "azurerm_role_assignment" "terraform_keyvault_user" {
   scope = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets Officer"
-  principal_id = data.azurerm_client_config.currently.object_id
+  #commenting the code below to avoid terraform flip-flop when we run it manually and via github workflow
+  #principal_id = data.azurerm_client_config.currently.object_id
+  principal_id = "9a9deb46-694d-4827-b6b1-da34e1f14104"  # hardcoded to your personal account - avoids flip-flopping between local runs (you) and pipeline runs (Service Principal)
+}
+
+resource "azurerm_role_assignment" "terraform_keyvault_pipeline" {
+   scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id          = "cdf02ff5-dc02-4fba-b71f-4928fddeb999"  # GitHub Actions Service Principal (pipeline runs)
 }

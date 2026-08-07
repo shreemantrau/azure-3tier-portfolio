@@ -37,6 +37,10 @@ resource "azurerm_linux_web_app" "app" {
     //"SQL_PASSWORD" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.sql_password.versionless_id})"
     "SQL_PASSWORD" = "@Microsoft.KeyVault(SecretUri=https://kv-3tier-shreyas.vault.azure.net/secrets/sql-admin-password/)"
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
+    # App Insights auto-generates connection_string when created - not something we define
+    # ourselves. Referencing it here tells this App Service exactly where to send its
+    # telemetry (requests, response times, errors) once App Insights integration is active.
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
   }
 
 
@@ -48,6 +52,10 @@ resource "azurerm_linux_web_app" "app" {
   
   site_config {
     app_command_line = "gunicorn --bind=0.0.0.0 app:app"
+  }
+
+  lifecycle {
+    ignore_changes = [virtual_network_subnet_id]
   }
 }
 
